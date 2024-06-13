@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -17,6 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
+
 	db := dbConfig.DbConnection()
 	defer db.Close()
 	if db != nil {
@@ -24,6 +24,8 @@ func main() {
 	} else {
 		log.Fatalf("Failed to establish a connection")
 	}
-	router := routes.BookRouter(db)
-	http.ListenAndServe(":8000", middlewares.SetJSONContentType(router))
+
+	router := routes.MainRouter(db)
+	router.Use(middlewares.SetJSONContentType)
+	log.Fatal(http.ListenAndServe(":8000", router))
 }

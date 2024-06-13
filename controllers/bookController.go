@@ -35,7 +35,7 @@ func GetBooks(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func GetBookByID(db *sql.DB) http.HandlerFunc {
+func GetBookById(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		log.Println(vars)
@@ -123,6 +123,40 @@ func UpdateBook(db *sql.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"message": "Book updated successfully",
 			"book":    book,
+		})
+	}
+}
+
+func DeleteBook(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, "Invalid book ID", http.StatusBadRequest)
+			return
+		}
+
+		var count int
+		err = db.QueryRow("SELECT COUNT(*) FROM books WHERE id = $1", id).Scan(&count)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if count == 0 {
+			http.Error(w, "No record found", http.StatusNotFound)
+			return
+		}
+
+		_, err = db.Exec("DELETE FROM books WHERE id=$1", id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "Book deleted successfully",
+			"book_id": id,
 		})
 	}
 }

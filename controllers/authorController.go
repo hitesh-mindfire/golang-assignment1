@@ -84,3 +84,78 @@ func CreateAuthor(db *sql.DB) http.HandlerFunc {
 		})
 	}
 }
+
+func UpdateAuthor(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, "Invalid author ID", http.StatusBadRequest)
+			return
+		}
+
+		var count int
+		err = db.QueryRow("SELECT COUNT(*) FROM authors WHERE id = $1", id).Scan(&count)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if count == 0 {
+			http.Error(w, "No record found", http.StatusNotFound)
+			return
+		}
+		log.Println("count", count)
+		var author models.Author
+		err = json.NewDecoder(r.Body).Decode(&author)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		_, err = db.Exec("UPDATE authors SET name=$1 WHERE id=$2", author.Name, id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		author.ID = id
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "Author updated successfully",
+			"author":  author,
+		})
+	}
+}
+
+func DeleteAuthor(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, "Invalid author ID", http.StatusBadRequest)
+			return
+		}
+
+		var count int
+		err = db.QueryRow("SELECT COUNT(*) FROM authors WHERE id = $1", id).Scan(&count)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if count == 0 {
+			http.Error(w, "No record found", http.StatusNotFound)
+			return
+		}
+
+		_, err = db.Exec("DELETE FROM authors WHERE id=$1", id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message":   "author deleted successfully",
+			"author_id": id,
+		})
+	}
+}

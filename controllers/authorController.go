@@ -4,14 +4,17 @@ import (
 	"assignment1/models"
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
+// @Summary Get all authors
+// @Description Retrieves a list of all authors.
+// @Produce json
+// @Success 200 {array} models.Author
+// @Router /authors [get]
 func GetAuthors(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query("SELECT id, name FROM authors")
@@ -35,19 +38,22 @@ func GetAuthors(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Get an author by ID
+// @Description Retrieves an author based on provided ID.
+// @Produce json
+// @Param id path string true "Author ID"
+// @Success 200 {object} models.Author
+// @Router /authors/{id} [get]
 func GetAuthorById(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		log.Println(vars)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		fmt.Println(id)
 		var author models.Author
 		row := db.QueryRow(`SELECT id, name FROM authors WHERE id=$1`, id)
-		log.Println(row, "row")
 		err = row.Scan(&author.ID, &author.Name)
 		if err == sql.ErrNoRows {
 			http.Error(w, "Author not found", http.StatusNotFound)
@@ -61,6 +67,13 @@ func GetAuthorById(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Create a new author
+// @Description Creates a new author with provided data.
+// @Accept json
+// @Produce json
+// @Param author body models.Author true "Author object"
+// @Success 201 {object} models.Author
+// @Router /authors [post]
 func CreateAuthor(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var author models.Author
@@ -75,7 +88,6 @@ func CreateAuthor(db *sql.DB) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println("id", id)
 		author.ID = int(id)
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -85,6 +97,14 @@ func CreateAuthor(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Update an existing author
+// @Description Updates an existing author with provided data.
+// @Accept json
+// @Produce json
+// @Param id path string true "Author ID"
+// @Param author body models.Author true "Author object"
+// @Success 200 {object} models.Author
+// @Router /authors/{id} [put]
 func UpdateAuthor(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -104,7 +124,7 @@ func UpdateAuthor(db *sql.DB) http.HandlerFunc {
 			http.Error(w, "No record found", http.StatusNotFound)
 			return
 		}
-		log.Println("count", count)
+
 		var author models.Author
 		err = json.NewDecoder(r.Body).Decode(&author)
 		if err != nil {
@@ -126,6 +146,11 @@ func UpdateAuthor(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Delete an author
+// @Description Deletes an author based on provided ID.
+// @Param id path string true "Author ID"
+// @Success 204 "No Content"
+// @Router /authors/{id} [delete]
 func DeleteAuthor(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -154,7 +179,7 @@ func DeleteAuthor(db *sql.DB) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"message":   "author deleted successfully",
+			"message":   "Author deleted successfully",
 			"author_id": id,
 		})
 	}

@@ -12,6 +12,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// @Summary Get all books
+// @Description Retrieves a list of all books.
+// @Produce json
+// @Success 200 {array} models.Book
+// @Router /books [get]
 func GetBooks(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query("SELECT id, title, author, year FROM books")
@@ -35,6 +40,12 @@ func GetBooks(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Get a book by ID
+// @Description Retrieves a book based on provided ID.
+// @Produce json
+// @Param id path string true "Book ID"
+// @Success 200 {object} models.Book
+// @Router /books/{id} [get]
 func GetBookById(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -62,6 +73,13 @@ func GetBookById(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Create a new book
+// @Description Creates a new book with provided data.
+// @Accept json
+// @Produce json
+// @Param book body models.Book true "Book object"
+// @Success 201 {object} models.Book
+// @Router /books [post]
 func CreateBook(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.Book
@@ -86,6 +104,14 @@ func CreateBook(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Update an existing book
+// @Description Updates an existing book with provided data.
+// @Accept json
+// @Produce json
+// @Param id path string true "Book ID"
+// @Param book body models.Book true "Book object"
+// @Success 200 {object} models.Book
+// @Router /books/{id} [put]
 func UpdateBook(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -127,6 +153,11 @@ func UpdateBook(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// @Summary Delete a book
+// @Description Deletes a book based on provided ID.
+// @Param id path string true "Book ID"
+// @Success 204 "No Content"
+// @Router /books/{id} [delete]
 func DeleteBook(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

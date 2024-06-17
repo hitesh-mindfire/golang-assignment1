@@ -2,6 +2,7 @@ package main
 
 import (
 	"assignment1/dbConfig"
+	_ "assignment1/docs"
 	"assignment1/middlewares"
 	"assignment1/routes"
 	"fmt"
@@ -11,6 +12,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// @title Golang Assignment
+// @version 1.0
+// @description This is a golang assignment1
 func main() {
 	err := godotenv.Load()
 	if err != nil {
